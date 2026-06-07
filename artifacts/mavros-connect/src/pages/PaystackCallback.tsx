@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PaystackCallback() {
   const [state, setState] = useState<"loading" | "success" | "failed">("loading");
   const [voucherCode, setVoucherCode] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [portalUrl, setPortalUrl] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -19,26 +21,33 @@ export default function PaystackCallback() {
       return;
     }
 
-    fetch(`/api/payments/paystack/verify/${reference}`)
-      .then((r) => r.json())
-      .then((data: { success: boolean; voucherCode?: string; message?: string }) => {
+    // Give Paystack webhook a moment to process, then verify
+    setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/payments/paystack/verify/${reference}`);
+        const data = await response.json() as { success: boolean; voucherCode?: string; message?: string };
+
         if (data.success && data.voucherCode) {
           setVoucherCode(data.voucherCode);
           localStorage.setItem("paystack_voucher", data.voucherCode);
           if (tenantSlug) {
             setPortalUrl(`/portal/${tenantSlug}?voucher=${data.voucherCode}`);
           }
+          
+          // Invalidate dashboard cache so it refreshes with new payment
+          queryClient.invalidateQueries({ queryKey: ["getDashboardStats"] });
+          
           setState("success");
         } else {
           setState("failed");
           setMessage(data.message ?? "Payment could not be verified.");
         }
-      })
-      .catch(() => {
+      } catch (error) {
         setState("failed");
         setMessage("Server error while verifying payment.");
-      });
-  }, []);
+      }
+    }, 1500); // Wait 1.5 seconds for webhook to process
+  }, [queryClient]);
 
   const handleGoBack = () => {
     if (portalUrl) {

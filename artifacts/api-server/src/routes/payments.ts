@@ -119,6 +119,7 @@ router.post("/payments/paystack/initialize", async (req, res): Promise<void> => 
 // ── Paystack: verify a transaction manually (for callback page) ───────────────
 router.get("/payments/paystack/verify/:reference", async (req, res): Promise<void> => {
   const ref = Array.isArray(req.params.reference) ? req.params.reference[0] : req.params.reference;
+  req.log.info({ reference: ref }, "Verifying Paystack payment");
 
   if (!PAYSTACK_SECRET) {
     res.status(503).json({ error: "Paystack not configured" });
@@ -130,26 +131,36 @@ router.get("/payments/paystack/verify/:reference", async (req, res): Promise<voi
   });
 
   const data = await paystackRes.json() as { status: boolean; data: { status: string; reference: string; metadata?: { packageId?: number; macAddress?: string } } };
+  req.log.info({ paystackStatus: data.status, transactionStatus: data.data?.status }, "Paystack verification response");
 
   if (!data.status || data.data.status !== "success") {
+    req.log.warn({ reference: ref }, "Payment not verified by Paystack");
     res.json({ success: false, message: "Payment not verified" });
     return;
   }
 
   // Already processed by webhook? Just return success.
   const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.reference, ref));
-  if (!payment) { res.status(404).json({ error: "Payment record not found" }); return; }
+  if (!payment) { 
+    req.log.error({ reference: ref }, "Payment record not found in database");
+    res.status(404).json({ error: "Payment record not found" }); 
+    return; 
+  }
+
+  req.log.info({ paymentId: payment.id, status: payment.status }, "Found payment record");
 
   if (payment.status === "completed") {
     // Get the voucher that was already created
     const [voucher] = payment.voucherId
       ? await db.select().from(vouchersTable).where(eq(vouchersTable.id, payment.voucherId))
       : [];
+    req.log.info({ paymentId: payment.id, voucherId: payment.voucherId }, "Payment already completed");
     res.json({ success: true, alreadyProcessed: true, voucherCode: voucher?.code ?? null });
     return;
   }
 
   // Process now (in case webhook was missed)
+  req.log.info({ paymentId: payment.id }, "Creating voucher and marking payment complete");
   const code = generateVoucherCode(8);
   const [voucher] = await db.insert(vouchersTable).values({
     tenantId: payment.tenantId,
@@ -163,18 +174,29 @@ router.get("/payments/paystack/verify/:reference", async (req, res): Promise<voi
     .set({ status: "completed", voucherId: voucher.id })
     .where(eq(paymentsTable.id, payment.id));
 
+  req.log.info({ paymentId: payment.id, voucherCode: code }, "Payment verified successfully");
   res.json({ success: true, voucherCode: voucher.code });
 });
 
 // ── Paystack webhook ──────────────────────────────────────────────────────────
 router.post("/payments/webhook/paystack", async (req, res): Promise<void> => {
   const event = req.body as { event: string; data?: { reference?: string } };
+  req.log.info({ event: event.event, reference: event.data?.reference }, "Paystack webhook received");
 
   if (event.event === "charge.success") {
     const reference = event.data?.reference;
     if (reference) {
+      req.log.info({ reference }, "Processing charge.success event");
       const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.reference, reference));
-      if (payment && payment.status === "pending") {
+      
+      if (!payment) {
+        req.log.error({ reference }, "Payment not found for webhook");
+        res.json({ received: true });
+        return;
+      }
+
+      if (payment.status === "pending") {
+        req.log.info({ paymentId: payment.id }, "Updating payment status to completed");
         const code = generateVoucherCode(8);
         const [voucher] = await db.insert(vouchersTable).values({
           tenantId: payment.tenantId,
@@ -186,8 +208,12 @@ router.post("/payments/webhook/paystack", async (req, res): Promise<void> => {
         await db.update(paymentsTable)
           .set({ status: "completed", voucherId: voucher.id, webhookPayload: JSON.stringify(event) })
           .where(eq(paymentsTable.id, payment.id));
-        req.log.info({ reference, voucherCode: code }, "Paystack payment completed, voucher created");
+        req.log.info({ paymentId: payment.id, voucherCode: code }, "Paystack payment completed via webhook, voucher created");
+      } else {
+        req.log.warn({ paymentId: payment.id, status: payment.status }, "Payment already processed");
       }
+    } else {
+      req.log.warn("Charge success event but no reference found");
     }
   }
 
