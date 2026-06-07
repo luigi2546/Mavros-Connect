@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { useListVouchers, getListVouchersQueryKey, useCreateVoucher, useBulkCreateVouchers, useDeleteVoucher } from "@workspace/api-client-react";
+import {
+  useListVouchers, getListVouchersQueryKey,
+  useCreateVoucher, useBulkCreateVouchers, useDeleteVoucher,
+  useListPackages, getListPackagesQueryKey,
+  useListLocations, getListLocationsQueryKey,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ticket, Copy, Trash2, Printer } from "lucide-react";
@@ -45,6 +51,11 @@ export default function Vouchers() {
     }
   };
 
+  const formatExpiry = (date: string | null | undefined) => {
+    if (!date) return "No expiry";
+    return new Date(date).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -60,16 +71,17 @@ export default function Vouchers() {
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="font-mono text-xs font-semibold uppercase">Code</TableHead>
-              <TableHead className="font-mono text-xs font-semibold uppercase">Package ID</TableHead>
+              <TableHead className="font-mono text-xs font-semibold uppercase">Package</TableHead>
               <TableHead className="font-mono text-xs font-semibold uppercase">Status</TableHead>
-              <TableHead className="font-mono text-xs font-semibold uppercase">Details</TableHead>
+              <TableHead className="font-mono text-xs font-semibold uppercase">Expiry</TableHead>
+              <TableHead className="font-mono text-xs font-semibold uppercase">Used</TableHead>
               <TableHead className="font-mono text-xs font-semibold uppercase text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -78,7 +90,7 @@ export default function Vouchers() {
               </TableRow>
             ) : vouchers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center font-mono text-muted-foreground">
+                <TableCell colSpan={6} className="h-24 text-center font-mono text-muted-foreground">
                   NO VOUCHERS GENERATED
                 </TableCell>
               </TableRow>
@@ -93,18 +105,33 @@ export default function Vouchers() {
                       </button>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">PKG-{voucher.packageId}</TableCell>
+                  <TableCell>
+                    {(voucher as any).package ? (
+                      <div>
+                        <p className="font-medium text-sm">{(voucher as any).package.name}</p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {(voucher as any).package.currency} {(voucher as any).package.price} · {(voucher as any).package.duration} {(voucher as any).package.durationUnit}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground">PKG-{voucher.packageId}</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge className={`font-mono uppercase text-[10px] ${getStatusColor(voucher.status)}`}>
                       {voucher.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="font-mono text-[10px] text-muted-foreground">
-                      {voucher.usedAt && <div>Used: {new Date(voucher.usedAt).toLocaleString()}</div>}
-                      {voucher.expiresAt && <div>Exp: {new Date(voucher.expiresAt).toLocaleString()}</div>}
-                      {voucher.usedByMac && <div>MAC: {voucher.usedByMac}</div>}
-                    </div>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {formatExpiry(voucher.expiresAt)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {voucher.usedAt
+                      ? new Date(voucher.usedAt).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+                      : "—"}
+                    {voucher.usedByMac && (
+                      <div className="text-[10px] opacity-60">{voucher.usedByMac}</div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -129,23 +156,28 @@ export default function Vouchers() {
 function GenerateDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const [packageId, setPackageId] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createMutation = useCreateVoucher();
 
+  const { data: packages } = useListPackages({ query: { queryKey: getListPackagesQueryKey() } });
+  const { data: locations } = useListLocations({ query: { queryKey: getListLocationsQueryKey() } });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createMutation.mutateAsync({ 
-        data: { 
+      await createMutation.mutateAsync({
+        data: {
           packageId: parseInt(packageId),
-          locationId: locationId ? parseInt(locationId) : undefined
-        } 
+          locationId: locationId ? parseInt(locationId) : undefined,
+          expiresAt: expiresAt || undefined,
+        }
       });
       queryClient.invalidateQueries({ queryKey: getListVouchersQueryKey() });
       toast({ title: "Voucher Generated", description: "New access code is ready." });
       onOpenChange(false);
-      setPackageId(""); setLocationId("");
+      setPackageId(""); setLocationId(""); setExpiresAt("");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Generation Failed", description: error?.message || "Error creating voucher." });
     }
@@ -164,15 +196,53 @@ function GenerateDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="packageId" className="font-mono text-xs uppercase">Package ID</Label>
-            <Input id="packageId" type="number" value={packageId} onChange={(e) => setPackageId(e.target.value)} required className="font-mono rounded-sm" />
+            <Label className="font-mono text-xs uppercase">Package</Label>
+            <Select value={packageId} onValueChange={setPackageId} required>
+              <SelectTrigger className="font-mono rounded-sm">
+                <SelectValue placeholder="Select a package…" />
+              </SelectTrigger>
+              <SelectContent>
+                {packages?.map((pkg) => (
+                  <SelectItem key={pkg.id} value={String(pkg.id)}>
+                    <span className="font-medium">{pkg.name}</span>
+                    <span className="ml-2 text-muted-foreground text-xs">
+                      {pkg.currency} {pkg.price} · {pkg.duration} {pkg.durationUnit}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="locationId" className="font-mono text-xs uppercase">Location ID (Optional)</Label>
-            <Input id="locationId" type="number" value={locationId} onChange={(e) => setLocationId(e.target.value)} className="font-mono rounded-sm" />
+            <Label className="font-mono text-xs uppercase">Location <span className="text-muted-foreground">(optional)</span></Label>
+            <Select value={locationId} onValueChange={setLocationId}>
+              <SelectTrigger className="font-mono rounded-sm">
+                <SelectValue placeholder="Any location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any location</SelectItem>
+                {locations?.map((loc) => (
+                  <SelectItem key={loc.id} value={String(loc.id)}>{loc.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="expiresAt" className="font-mono text-xs uppercase">
+              Expires On <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              id="expiresAt"
+              type="date"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="font-mono rounded-sm"
+            />
+            <p className="text-[10px] text-muted-foreground font-mono">Leave blank for no expiry</p>
           </div>
           <div className="pt-4 flex justify-end">
-            <Button type="submit" disabled={createMutation.isPending} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
+            <Button type="submit" disabled={createMutation.isPending || !packageId} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
               {createMutation.isPending ? 'GENERATING...' : 'GENERATE'}
             </Button>
           </div>
@@ -184,24 +254,31 @@ function GenerateDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (
 
 function BulkGenerateDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const [packageId, setPackageId] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [quantity, setQuantity] = useState("10");
+  const [expiresAt, setExpiresAt] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const bulkCreateMutation = useBulkCreateVouchers();
 
+  const { data: packages } = useListPackages({ query: { queryKey: getListPackagesQueryKey() } });
+  const { data: locations } = useListLocations({ query: { queryKey: getListLocationsQueryKey() } });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await bulkCreateMutation.mutateAsync({ 
-        data: { 
+      await bulkCreateMutation.mutateAsync({
+        data: {
           packageId: parseInt(packageId),
-          quantity: parseInt(quantity)
-        } 
+          locationId: locationId ? parseInt(locationId) : undefined,
+          quantity: parseInt(quantity),
+          expiresAt: expiresAt || undefined,
+        }
       });
       queryClient.invalidateQueries({ queryKey: getListVouchersQueryKey() });
       toast({ title: "Batch Completed", description: `${quantity} vouchers generated successfully.` });
       onOpenChange(false);
-      setPackageId(""); setQuantity("10");
+      setPackageId(""); setLocationId(""); setQuantity("10"); setExpiresAt("");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Batch Failed", description: error?.message || "Error generating batch." });
     }
@@ -214,24 +291,75 @@ function BulkGenerateDialog({ open, onOpenChange }: { open: boolean, onOpenChang
           <Ticket className="mr-2 h-4 w-4" /> Bulk Generate
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-sm border-border bg-card">
+      <DialogContent className="sm:max-w-[450px] rounded-sm border-border bg-card">
         <DialogHeader>
           <DialogTitle className="font-mono uppercase tracking-wider">Batch Generate</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label className="font-mono text-xs uppercase">Package</Label>
+            <Select value={packageId} onValueChange={setPackageId} required>
+              <SelectTrigger className="font-mono rounded-sm">
+                <SelectValue placeholder="Select a package…" />
+              </SelectTrigger>
+              <SelectContent>
+                {packages?.map((pkg) => (
+                  <SelectItem key={pkg.id} value={String(pkg.id)}>
+                    <span className="font-medium">{pkg.name}</span>
+                    <span className="ml-2 text-muted-foreground text-xs">
+                      {pkg.currency} {pkg.price} · {pkg.duration} {pkg.durationUnit}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="bulkPackageId" className="font-mono text-xs uppercase">Package ID</Label>
-              <Input id="bulkPackageId" type="number" value={packageId} onChange={(e) => setPackageId(e.target.value)} required className="font-mono rounded-sm" />
+              <Label className="font-mono text-xs uppercase">Location <span className="text-muted-foreground">(opt.)</span></Label>
+              <Select value={locationId} onValueChange={setLocationId}>
+                <SelectTrigger className="font-mono rounded-sm">
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any location</SelectItem>
+                  {locations?.map((loc) => (
+                    <SelectItem key={loc.id} value={String(loc.id)}>{loc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantity" className="font-mono text-xs uppercase">Quantity</Label>
-              <Input id="quantity" type="number" min="1" max="1000" value={quantity} onChange={(e) => setQuantity(e.target.value)} required className="font-mono rounded-sm" />
+              <Label htmlFor="bulkQty" className="font-mono text-xs uppercase">Quantity</Label>
+              <Input
+                id="bulkQty"
+                type="number"
+                min="1"
+                max="1000"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                required
+                className="font-mono rounded-sm"
+              />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="bulkExpiresAt" className="font-mono text-xs uppercase">
+              Expires On <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              id="bulkExpiresAt"
+              type="date"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="font-mono rounded-sm"
+            />
+            <p className="text-[10px] text-muted-foreground font-mono">Leave blank for no expiry</p>
+          </div>
           <div className="pt-4 flex justify-end">
-            <Button type="submit" disabled={bulkCreateMutation.isPending} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
-              {bulkCreateMutation.isPending ? 'PROCESSING...' : 'EXECUTE BATCH'}
+            <Button type="submit" disabled={bulkCreateMutation.isPending || !packageId} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
+              {bulkCreateMutation.isPending ? 'PROCESSING...' : `GENERATE ${quantity} VOUCHERS`}
             </Button>
           </div>
         </form>
