@@ -1,22 +1,43 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Mavros Connect API - SaaS Hotspot Management Platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: tenants
+    description: Tenant management
+  - name: locations
+    description: Location management
+  - name: users
+    description: User management
+  - name: routers
+    description: Router/MikroTik management
+  - name: packages
+    description: Internet packages
+  - name: vouchers
+    description: Voucher management
+  - name: payments
+    description: Payment management
+  - name: sessions
+    description: Active session management
+  - name: dashboard
+    description: Analytics and dashboard
+  - name: captive-portal
+    description: Captive portal endpoints
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +45,1864 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new operator account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email already exists
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh JWT access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenInput"
+      responses:
+        "200":
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout and invalidate tokens
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: Reset email sent
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset successful
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── TENANTS ─────────────────────────────────────────────────────────────────
+  /tenants:
+    get:
+      operationId: listTenants
+      tags: [tenants]
+      summary: List all tenants (super-admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+
+    post:
+      operationId: createTenant
+      tags: [tenants]
+      summary: Create a new tenant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantInput"
+      responses:
+        "201":
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [tenants]
+      summary: Get tenant by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+    patch:
+      operationId: updateTenant
+      tags: [tenants]
+      summary: Update tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUpdate"
+      responses:
+        "200":
+          description: Updated tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /tenants/me:
+    get:
+      operationId: getMyTenant
+      tags: [tenants]
+      summary: Get current user's tenant
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  # ─── LOCATIONS ───────────────────────────────────────────────────────────────
+  /locations:
+    get:
+      operationId: listLocations
+      tags: [locations]
+      summary: List all locations for the tenant
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Location"
+
+    post:
+      operationId: createLocation
+      tags: [locations]
+      summary: Create a new location
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "201":
+          description: Location created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+  /locations/{id}:
+    get:
+      operationId: getLocation
+      tags: [locations]
+      summary: Get location by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+    patch:
+      operationId: updateLocation
+      tags: [locations]
+      summary: Update location
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+    delete:
+      operationId: deleteLocation
+      tags: [locations]
+      summary: Delete location
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── USERS ───────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List users for tenant
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a staff user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /users/{id}/suspend:
+    post:
+      operationId: suspendUser
+      tags: [users]
+      summary: Suspend a hotspot user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/unsuspend:
+    post:
+      operationId: unsuspendUser
+      tags: [users]
+      summary: Unsuspend a hotspot user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User unsuspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── ROUTERS ─────────────────────────────────────────────────────────────────
+  /routers:
+    get:
+      operationId: listRouters
+      tags: [routers]
+      summary: List all routers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of routers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HotspotRouter"
+
+    post:
+      operationId: createRouter
+      tags: [routers]
+      summary: Add a new router
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouterInput"
+      responses:
+        "201":
+          description: Router added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotspotRouter"
+
+  /routers/{id}:
+    get:
+      operationId: getRouter
+      tags: [routers]
+      summary: Get router by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Router
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotspotRouter"
+
+    patch:
+      operationId: updateRouter
+      tags: [routers]
+      summary: Update router
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouterUpdate"
+      responses:
+        "200":
+          description: Updated router
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotspotRouter"
+
+    delete:
+      operationId: deleteRouter
+      tags: [routers]
+      summary: Delete router
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /routers/{id}/test:
+    post:
+      operationId: testRouterConnection
+      tags: [routers]
+      summary: Test MikroTik API connection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouterConnectionTest"
+
+  /routers/{id}/active-users:
+    get:
+      operationId: getRouterActiveUsers
+      tags: [routers]
+      summary: Get active hotspot users on router
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Active users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActiveUser"
+
+  # ─── PACKAGES ────────────────────────────────────────────────────────────────
+  /packages:
+    get:
+      operationId: listPackages
+      tags: [packages]
+      summary: List all internet packages
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Package"
+
+    post:
+      operationId: createPackage
+      tags: [packages]
+      summary: Create an internet package
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageInput"
+      responses:
+        "201":
+          description: Package created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+
+  /packages/{id}:
+    get:
+      operationId: getPackage
+      tags: [packages]
+      summary: Get package by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Package
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+
+    patch:
+      operationId: updatePackage
+      tags: [packages]
+      summary: Update package
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageUpdate"
+      responses:
+        "200":
+          description: Updated package
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+
+    delete:
+      operationId: deletePackage
+      tags: [packages]
+      summary: Delete package
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── VOUCHERS ────────────────────────────────────────────────────────────────
+  /vouchers:
+    get:
+      operationId: listVouchers
+      tags: [vouchers]
+      summary: List vouchers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of vouchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Voucher"
+
+    post:
+      operationId: createVoucher
+      tags: [vouchers]
+      summary: Generate a single voucher
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoucherInput"
+      responses:
+        "201":
+          description: Voucher created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Voucher"
+
+  /vouchers/bulk:
+    post:
+      operationId: bulkCreateVouchers
+      tags: [vouchers]
+      summary: Generate multiple vouchers in bulk
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkVoucherInput"
+      responses:
+        "201":
+          description: Vouchers generated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Voucher"
+
+  /vouchers/{id}:
+    get:
+      operationId: getVoucher
+      tags: [vouchers]
+      summary: Get voucher by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Voucher
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Voucher"
+
+    delete:
+      operationId: deleteVoucher
+      tags: [vouchers]
+      summary: Delete / revoke a voucher
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /vouchers/validate:
+    post:
+      operationId: validateVoucher
+      tags: [vouchers]
+      summary: Validate a voucher code (captive portal)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoucherValidateInput"
+      responses:
+        "200":
+          description: Voucher validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoucherValidationResult"
+
+  # ─── PAYMENTS ────────────────────────────────────────────────────────────────
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List all payments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+
+    post:
+      operationId: initiatePayment
+      tags: [payments]
+      summary: Initiate a payment (mobile money / Paystack)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get payment by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/webhook/paystack:
+    post:
+      operationId: paystackWebhook
+      tags: [payments]
+      summary: Paystack webhook handler
+      responses:
+        "200":
+          description: Webhook processed
+
+  /payments/webhook/momo:
+    post:
+      operationId: momoWebhook
+      tags: [payments]
+      summary: Mobile Money webhook handler
+      responses:
+        "200":
+          description: Webhook processed
+
+  # ─── SESSIONS ────────────────────────────────────────────────────────────────
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List all hotspot sessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HotspotSession"
+
+  /sessions/active:
+    get:
+      operationId: listActiveSessions
+      tags: [sessions]
+      summary: List currently active sessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HotspotSession"
+
+  /sessions/{id}/terminate:
+    post:
+      operationId: terminateSession
+      tags: [sessions]
+      summary: Terminate an active session
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session terminated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotspotSession"
+
+  # ─── DASHBOARD ───────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get overall dashboard statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/revenue:
+    get:
+      operationId: getRevenueAnalytics
+      tags: [dashboard]
+      summary: Get revenue analytics over time
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        "200":
+          description: Revenue data points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueDataPoint"
+
+  /dashboard/traffic:
+    get:
+      operationId: getTrafficStats
+      tags: [dashboard]
+      summary: Get network traffic statistics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+            default: 7d
+      responses:
+        "200":
+          description: Traffic data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrafficDataPoint"
+
+  /dashboard/top-packages:
+    get:
+      operationId: getTopPackages
+      tags: [dashboard]
+      summary: Get most popular packages by usage
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Top packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PackageStats"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ─── CAPTIVE PORTAL ──────────────────────────────────────────────────────────
+  /portal/{tenantSlug}/config:
+    get:
+      operationId: getPortalConfig
+      tags: [captive-portal]
+      summary: Get captive portal branding config
+      parameters:
+        - name: tenantSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portal configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalConfig"
+
+  /portal/{tenantSlug}/packages:
+    get:
+      operationId: getPortalPackages
+      tags: [captive-portal]
+      summary: Get available packages for captive portal purchase
+      parameters:
+        - name: tenantSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Package"
+
+  /portal/{tenantSlug}/connect:
+    post:
+      operationId: portalConnect
+      tags: [captive-portal]
+      summary: Connect via voucher or purchase
+      parameters:
+        - name: tenantSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalConnectInput"
+      responses:
+        "200":
+          description: Connection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalConnectResult"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # ── Auth ─────────────────────────────────────────────────────────────────
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    RegisterInput:
+      type: object
+      required: [email, password, name, tenantName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        tenantName:
+          type: string
+
+    RefreshTokenInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    ResetPasswordInput:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # ── User ─────────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, email, name, role, tenantId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [super_admin, admin, manager, staff]
+        tenantId:
+          type: ["integer", "null"]
+        locationId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, suspended, inactive]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, staff]
+        password:
+          type: string
+          minLength: 8
+        locationId:
+          type: ["integer", "null"]
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, staff]
+        locationId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, suspended, inactive]
+
+    # ── Tenant ───────────────────────────────────────────────────────────────
+    Tenant:
+      type: object
+      required: [id, name, slug, status, plan, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, suspended, trial]
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    TenantInput:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+
+    TenantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, trial]
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+
+    # ── Location ─────────────────────────────────────────────────────────────
+    Location:
+      type: object
+      required: [id, tenantId, name, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+        createdAt:
+          type: string
+          format: date-time
+
+    LocationInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+
+    LocationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+
+    # ── Router ───────────────────────────────────────────────────────────────
+    HotspotRouter:
+      type: object
+      required: [id, tenantId, locationId, name, ipAddress, apiPort, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        locationId:
+          type: integer
+        name:
+          type: string
+        ipAddress:
+          type: string
+        apiPort:
+          type: integer
+        username:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, unknown]
+        model:
+          type: ["string", "null"]
+        firmwareVersion:
+          type: ["string", "null"]
+        lastSeen:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RouterInput:
+      type: object
+      required: [name, ipAddress, apiPort, username, password, locationId]
+      properties:
+        name:
+          type: string
+        ipAddress:
+          type: string
+        apiPort:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+        locationId:
+          type: integer
+        model:
+          type: string
+
+    RouterUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        ipAddress:
+          type: string
+        apiPort:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+        locationId:
+          type: integer
+
+    RouterConnectionTest:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        routerInfo:
+          type: ["object", "null"]
+          properties:
+            model:
+              type: string
+            version:
+              type: string
+            uptime:
+              type: string
+
+    ActiveUser:
+      type: object
+      required: [mac, ip, username, uptime, bytesIn, bytesOut]
+      properties:
+        mac:
+          type: string
+        ip:
+          type: string
+        username:
+          type: string
+        uptime:
+          type: string
+        bytesIn:
+          type: integer
+        bytesOut:
+          type: integer
+
+    # ── Package ──────────────────────────────────────────────────────────────
+    Package:
+      type: object
+      required: [id, tenantId, name, price, duration, durationUnit, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        currency:
+          type: string
+        duration:
+          type: integer
+        durationUnit:
+          type: string
+          enum: [minutes, hours, days, weeks, months]
+        downloadSpeed:
+          type: ["integer", "null"]
+        uploadSpeed:
+          type: ["integer", "null"]
+        dataCapMb:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+        createdAt:
+          type: string
+          format: date-time
+
+    PackageInput:
+      type: object
+      required: [name, price, duration, durationUnit]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        duration:
+          type: integer
+        durationUnit:
+          type: string
+          enum: [minutes, hours, days, weeks, months]
+        downloadSpeed:
+          type: integer
+        uploadSpeed:
+          type: integer
+        dataCapMb:
+          type: integer
+
+    PackageUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        duration:
+          type: integer
+        durationUnit:
+          type: string
+          enum: [minutes, hours, days, weeks, months]
+        downloadSpeed:
+          type: integer
+        uploadSpeed:
+          type: integer
+        dataCapMb:
+          type: integer
+        status:
+          type: string
+          enum: [active, inactive]
+
+    # ── Voucher ──────────────────────────────────────────────────────────────
+    Voucher:
+      type: object
+      required: [id, tenantId, packageId, code, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        packageId:
+          type: integer
+        locationId:
+          type: ["integer", "null"]
+        code:
+          type: string
+        status:
+          type: string
+          enum: [unused, active, used, expired, revoked]
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+        usedAt:
+          type: ["string", "null"]
+          format: date-time
+        usedByMac:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        package:
+          $ref: "#/components/schemas/Package"
+
+    VoucherInput:
+      type: object
+      required: [packageId]
+      properties:
+        packageId:
+          type: integer
+        locationId:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time
+
+    BulkVoucherInput:
+      type: object
+      required: [packageId, quantity]
+      properties:
+        packageId:
+          type: integer
+        locationId:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        expiresAt:
+          type: string
+          format: date-time
+
+    VoucherValidateInput:
+      type: object
+      required: [code, tenantSlug]
+      properties:
+        code:
+          type: string
+        tenantSlug:
+          type: string
+        macAddress:
+          type: string
+
+    VoucherValidationResult:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
+        message:
+          type: string
+        voucher:
+          $ref: "#/components/schemas/Voucher"
+
+    # ── Payment ──────────────────────────────────────────────────────────────
+    Payment:
+      type: object
+      required: [id, tenantId, packageId, amount, currency, method, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        packageId:
+          type: integer
+        amount:
+          type: number
+        currency:
+          type: string
+        method:
+          type: string
+          enum: [paystack, momo, cash, other]
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        reference:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        macAddress:
+          type: ["string", "null"]
+        voucherId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentInput:
+      type: object
+      required: [packageId, method, amount]
+      properties:
+        packageId:
+          type: integer
+        method:
+          type: string
+          enum: [paystack, momo]
+        amount:
+          type: number
+        phone:
+          type: string
+        email:
+          type: string
+        macAddress:
+          type: string
+        tenantSlug:
+          type: string
+
+    # ── Session ──────────────────────────────────────────────────────────────
+    HotspotSession:
+      type: object
+      required: [id, tenantId, macAddress, startedAt, status]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        locationId:
+          type: ["integer", "null"]
+        routerId:
+          type: ["integer", "null"]
+        voucherId:
+          type: ["integer", "null"]
+        paymentId:
+          type: ["integer", "null"]
+        macAddress:
+          type: string
+        ipAddress:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        bytesIn:
+          type: integer
+        bytesOut:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [active, ended, expired]
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalRevenue, activeUsers, totalVouchers, usedVouchers, activeRouters, totalLocations, totalSessions, revenueToday]
+      properties:
+        totalRevenue:
+          type: number
+        revenueToday:
+          type: number
+        activeUsers:
+          type: integer
+        totalVouchers:
+          type: integer
+        usedVouchers:
+          type: integer
+        activeRouters:
+          type: integer
+        totalLocations:
+          type: integer
+        totalSessions:
+          type: integer
+        activeSessions:
+          type: integer
+
+    RevenueDataPoint:
+      type: object
+      required: [date, amount, count]
+      properties:
+        date:
+          type: string
+        amount:
+          type: number
+        count:
+          type: integer
+
+    TrafficDataPoint:
+      type: object
+      required: [date, bytesIn, bytesOut, sessions]
+      properties:
+        date:
+          type: string
+        bytesIn:
+          type: integer
+        bytesOut:
+          type: integer
+        sessions:
+          type: integer
+
+    PackageStats:
+      type: object
+      required: [packageId, packageName, count, revenue]
+      properties:
+        packageId:
+          type: integer
+        packageName:
+          type: string
+        count:
+          type: integer
+        revenue:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [payment, voucher, session, user, router]
+        description:
+          type: string
+        amount:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Portal ───────────────────────────────────────────────────────────────
+    PortalConfig:
+      type: object
+      required: [tenantId, tenantName, logoUrl, primaryColor]
+      properties:
+        tenantId:
+          type: integer
+        tenantName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: string
+        welcomeMessage:
+          type: ["string", "null"]
+        supportPhone:
+          type: ["string", "null"]
+
+    PortalConnectInput:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [voucher, purchase]
+        voucherCode:
+          type: string
+        packageId:
+          type: integer
+        phone:
+          type: string
+        email:
+          type: string
+        macAddress:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [momo, paystack]
+
+    PortalConnectResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        redirectUrl:
+          type: ["string", "null"]
+        paymentReference:
+          type: ["string", "null"]
+        sessionId:
+          type: ["integer", "null"]
