@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Package as PackageIcon, Trash2 } from "lucide-react";
+import { ghs } from "@/lib/currency";
 
 export default function Packages() {
   const { data: packages, isLoading } = useListPackages({ query: { queryKey: getListPackagesQueryKey() } });
@@ -81,8 +82,8 @@ export default function Packages() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-mono font-medium">${pkg.price}</div>
-                    <div className="font-mono text-xs text-muted-foreground">{pkg.currency || 'USD'}</div>
+                    <div className="font-mono font-medium">{ghs(pkg.price)}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{pkg.currency || 'GHS'}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={pkg.status === 'active' ? 'default' : 'secondary'} className="font-mono uppercase text-[10px]">

@@ -2,6 +2,7 @@ import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/a
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, CreditCard, MapPin, Users, Wifi, Ticket } from "lucide-react";
+import { ghs } from "@/lib/currency";
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useGetDashboardStats({ query: { queryKey: getGetDashboardStatsQueryKey() } });
@@ -28,13 +29,13 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard 
           title="Total Revenue" 
-          value={`$${(stats?.totalRevenue || 0).toFixed(2)}`} 
+          value={ghs(stats?.totalRevenue || 0)} 
           icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} 
           subtitle="All time"
         />
         <StatsCard 
           title="Revenue Today" 
-          value={`$${(stats?.revenueToday || 0).toFixed(2)}`} 
+          value={ghs(stats?.revenueToday || 0)} 
           icon={<CreditCard className="h-4 w-4 text-primary" />} 
           subtitle="Past 24h"
           highlight

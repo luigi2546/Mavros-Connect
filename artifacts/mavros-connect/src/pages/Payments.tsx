@@ -2,6 +2,7 @@ import { useListPayments, getListPaymentsQueryKey } from "@workspace/api-client-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ghs } from "@/lib/currency";
 
 export default function Payments() {
   const { data: payments, isLoading } = useListPayments({ query: { queryKey: getListPaymentsQueryKey() } });
@@ -61,8 +62,8 @@ export default function Payments() {
                     <div className="font-mono text-xs text-muted-foreground">PKG-{payment.packageId}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-mono font-medium">${payment.amount.toFixed(2)}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground">{payment.currency}</div>
+                    <div className="font-mono font-medium">{ghs(payment.amount)}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{payment.currency || 'GHS'}</div>
                   </TableCell>
                   <TableCell>
                     <Badge className={`font-mono uppercase text-[10px] ${getStatusColor(payment.status)}`}>
