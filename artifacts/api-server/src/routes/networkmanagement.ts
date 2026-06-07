@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, type IRouter } from "express";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
 import {

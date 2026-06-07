@@ -157,6 +157,18 @@ importers:
 
   .:
     devDependencies:
+      '@esbuild/win32-x64':
+        specifier: ^0.27.3
+        version: 0.27.3
+      '@parcel/watcher-win32-x64':
+        specifier: ^2.5.6
+        version: 2.5.6
+      '@rollup/rollup-win32-x64-msvc':
+        specifier: ^4.61.1
+        version: 4.61.1
+      lightningcss:
+        specifier: ^1.32.0
+        version: 1.32.0
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
@@ -761,6 +773,12 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@esbuild/win32-x64@0.27.3':
+    resolution: {integrity: sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [win32]
+
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
 
@@ -857,6 +875,12 @@ packages:
 
   '@orval/zod@8.15.0':
     resolution: {integrity: sha512-5970pTfgsqUtygNxoLVlL6dKAv31UogAkBCRfmgQPSzr4sMXKya2WhLl1ERSNYMr9A+iGBWVR5ZmYtPGhAaVDg==}
+
+  '@parcel/watcher-win32-x64@2.5.6':
+    resolution: {integrity: sha512-hbQlYcCq5dlAX9Qx+kFb0FHue6vbjlf0FrNzSKdYK2APUf7tGfGxQCk2ihEREmbR6ZMc0MVAD5RIX/41gpUzTw==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [win32]
 
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
@@ -1503,6 +1527,11 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+
+  '@rollup/rollup-win32-x64-msvc@4.61.1':
+    resolution: {integrity: sha512-X+zaP2x+j4RXGfbp/seSoRHWnPxzApilDszisZxbYH5C/jTxFhCtDNdPGZb9lJyYPs24wGxruPF7Y+sIXt9Gzw==}
+    cpu: [x64]
+    os: [win32]
 
   '@scalar/helpers@0.8.1':
     resolution: {integrity: sha512-yuiuBCadP5bjAnIv23QvifVN/NaMi9xBF6b8Wdk4QOzwzLPJmp699MAdf33J0A5i2qKcvnu32iz/VkEJmQRe5g==}
@@ -3313,6 +3342,8 @@ snapshots:
   '@esbuild/linux-x64@0.27.3':
     optional: true
 
+  '@esbuild/win32-x64@0.27.3': {}
+
   '@floating-ui/core@1.7.5':
     dependencies:
       '@floating-ui/utils': 0.2.11
@@ -3491,6 +3522,8 @@ snapshots:
       - '@faker-js/faker'
       - supports-color
       - typescript
+
+  '@parcel/watcher-win32-x64@2.5.6': {}
 
   '@pinojs/redact@0.4.0': {}
 
@@ -4185,6 +4218,8 @@ snapshots:
 
   '@rollup/rollup-linux-x64-gnu@4.61.1':
     optional: true
+
+  '@rollup/rollup-win32-x64-msvc@4.61.1': {}
 
   '@scalar/helpers@0.8.1': {}
 

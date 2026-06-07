@@ -9,7 +9,7 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { tenantsTable } from "./main";
+import { tenantsTable } from "./tenants";
 
 export const apiKeysTable = pgTable("api_keys", {
   id: serial("id").primaryKey(),

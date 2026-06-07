@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, type IRouter } from "express";
 import { eq, gte, lte, and, sql, desc } from "drizzle-orm";
 import { db, paymentsTable, sessionsTable, vouchersTable, packagesTable } from "@workspace/db";

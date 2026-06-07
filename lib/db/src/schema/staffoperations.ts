@@ -9,9 +9,9 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { usersTable } from "./main";
-import { tenantsTable } from "./main";
-import { locationsTable } from "./main";
+import { usersTable } from "./users";
+import { tenantsTable } from "./tenants";
+import { locationsTable } from "./locations";
 
 export const rolesTable = pgTable("roles", {
   id: serial("id").primaryKey(),

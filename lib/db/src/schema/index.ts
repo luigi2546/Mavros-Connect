@@ -11,4 +11,6 @@ export * from "./notifications";
 export * from "./billing";
 export * from "./userexperience";
 export * from "./networkmanagement";
-export * from "./billing";
+export * from "./staffoperations";
+export * from "./businessfeatures";
+export * from "./integrationapis";

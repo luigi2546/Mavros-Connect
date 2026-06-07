@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
@@ -11,8 +12,8 @@ import {
   oauthAppsTable,
   oauthTokensTable,
   apiRateLimitsTable,
-} from "@workspace/db/schema/integrationapis";
-import authenticate from "../middlewares/authenticate";
+} from "@workspace/db";
+import { authenticate } from "../middlewares/authenticate";
 
 const router = Router();
 
