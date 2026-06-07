@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetPortalConfig, getGetPortalConfigQueryKey, useGetPortalPackages, getGetPortalPackagesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,24 @@ export default function Portal() {
   const { data: packages } = useGetPortalPackages(tenantSlug, {
     query: { queryKey: getGetPortalPackagesQueryKey(tenantSlug) },
   });
+
+  // Check for voucher code from Paystack callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const voucherFromUrl = params.get("voucher");
+    const voucherFromStorage = localStorage.getItem("paystack_voucher");
+    
+    if (voucherFromUrl) {
+      setVoucherCode(voucherFromUrl);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (voucherFromStorage) {
+      setVoucherCode(voucherFromStorage);
+    }
+    
+    // Clear voucher from storage after displaying
+    localStorage.removeItem("paystack_voucher");
+  }, []);
 
   const primaryColor = config?.primaryColor ?? "#4F46E5";
 
@@ -67,6 +85,8 @@ export default function Portal() {
       });
       const data = await res.json() as { authorizationUrl?: string; error?: string };
       if (data.authorizationUrl) {
+        // Store tenant slug for callback redirect
+        localStorage.setItem("paystack_tenant_slug", tenantSlug);
         window.location.href = data.authorizationUrl;
       } else {
         toast({ title: "Payment Error", description: data.error ?? "Could not start payment.", variant: "destructive" });

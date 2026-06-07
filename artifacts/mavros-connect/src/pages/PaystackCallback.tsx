@@ -6,20 +6,28 @@ export default function PaystackCallback() {
   const [state, setState] = useState<"loading" | "success" | "failed">("loading");
   const [voucherCode, setVoucherCode] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [portalUrl, setPortalUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reference = params.get("reference") ?? params.get("trxref");
+    const tenantSlug = localStorage.getItem("paystack_tenant_slug");
+    
     if (!reference) {
       setState("failed");
       setMessage("No payment reference found.");
       return;
     }
+
     fetch(`/api/payments/paystack/verify/${reference}`)
       .then((r) => r.json())
       .then((data: { success: boolean; voucherCode?: string; message?: string }) => {
         if (data.success && data.voucherCode) {
           setVoucherCode(data.voucherCode);
+          localStorage.setItem("paystack_voucher", data.voucherCode);
+          if (tenantSlug) {
+            setPortalUrl(`/portal/${tenantSlug}?voucher=${data.voucherCode}`);
+          }
           setState("success");
         } else {
           setState("failed");
@@ -31,6 +39,14 @@ export default function PaystackCallback() {
         setMessage("Server error while verifying payment.");
       });
   }, []);
+
+  const handleGoBack = () => {
+    if (portalUrl) {
+      window.location.href = portalUrl;
+    } else {
+      window.history.back();
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -52,15 +68,15 @@ export default function PaystackCallback() {
               <p className="text-xs text-indigo-600 font-semibold uppercase tracking-widest mb-1">Your Access Code</p>
               <p className="font-mono text-3xl font-black tracking-widest text-indigo-700">{voucherCode}</p>
             </div>
-            <p className="text-xs text-gray-400 mb-6">Go back to the hotspot portal and enter this code to connect.</p>
+            <p className="text-xs text-gray-400 mb-6">Redirecting you back to the hotspot portal to activate your access...</p>
             <Button
               className="w-full font-bold"
               onClick={() => {
                 navigator.clipboard?.writeText(voucherCode);
-                window.history.back();
+                handleGoBack();
               }}
             >
-              Copy Code & Go Back
+              Copy Code & Go to Portal
             </Button>
           </>
         )}
@@ -70,8 +86,8 @@ export default function PaystackCallback() {
             <XCircle className="mx-auto h-14 w-14 text-red-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Verification Failed</h2>
             <p className="text-gray-500 text-sm mb-6">{message}</p>
-            <Button variant="outline" className="w-full" onClick={() => window.history.back()}>
-              Go Back
+            <Button variant="outline" className="w-full" onClick={handleGoBack}>
+              Go Back to Portal
             </Button>
           </>
         )}
