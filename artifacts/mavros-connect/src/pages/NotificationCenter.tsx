@@ -16,6 +16,22 @@ interface Notification {
   createdAt: string;
 }
 
+// Helper function for authenticated fetch
+async function authenticatedFetch(url: string, options?: RequestInit) {
+  const token = localStorage.getItem("mavros_access_token");
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...options?.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export default function Notifications() {
   const queryClient = useQueryClient();
   const [preferences, setPreferences] = useState({
@@ -27,19 +43,13 @@ export default function Notifications() {
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["notifications"],
-    queryFn: async () => {
-      const res = await fetch("/api/notifications?limit=50");
-      return res.json();
-    },
+    queryFn: () => authenticatedFetch("/api/notifications?limit=50"),
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   const { data: prefs, isLoading: prefsLoading } = useQuery({
     queryKey: ["notificationPreferences"],
-    queryFn: async () => {
-      const res = await fetch("/api/notification-preferences");
-      return res.json();
-    },
+    queryFn: () => authenticatedFetch("/api/notification-preferences"),
   });
 
   useEffect(() => {
@@ -54,43 +64,33 @@ export default function Notifications() {
   }, [prefs]);
 
   const markAsReadMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
-      return res.json();
-    },
+    mutationFn: (id: number) => authenticatedFetch(`/api/notifications/${id}/read`, { method: "PATCH" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const markAllReadMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/notifications/mark-all-read", { method: "POST" });
-      return res.json();
-    },
+    mutationFn: () => authenticatedFetch("/api/notifications/mark-all-read", { method: "POST" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await fetch(`/api/notifications/${id}`, { method: "DELETE" });
-    },
+    mutationFn: (id: number) => authenticatedFetch(`/api/notifications/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const updatePreferencesMutation = useMutation({
-    mutationFn: async (prefs: typeof preferences) => {
-      const res = await fetch("/api/notification-preferences", {
+    mutationFn: (prefs: typeof preferences) =>
+      authenticatedFetch("/api/notification-preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prefs),
-      });
-      return res.json();
-    },
+      }),
   });
 
   const getIcon = (type: string) => {

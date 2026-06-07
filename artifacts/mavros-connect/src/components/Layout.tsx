@@ -21,6 +21,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// Helper function for authenticated fetch
+async function authenticatedFetch(url: string) {
+  const token = localStorage.getItem("mavros_access_token");
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
 const adminNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -51,10 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Get unread notification count
   const { data: unreadData } = useQuery({
     queryKey: ["unreadNotifications"],
-    queryFn: async () => {
-      const res = await fetch("/api/notifications/unread-count");
-      return res.json();
-    },
+    queryFn: () => authenticatedFetch("/api/notifications/unread-count"),
     refetchInterval: 15000, // Refresh every 15 seconds
   });
 
