@@ -18,6 +18,7 @@ import {
   BarChart3,
   TrendingUp,
   Bell,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -42,6 +43,7 @@ const adminNavItems = [
   { href: "/packages", label: "Packages", icon: Package },
   { href: "/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/billing", label: "Billing", icon: Wallet },
   { href: "/sessions", label: "Sessions", icon: Activity },
   { href: "/users", label: "Staff", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },

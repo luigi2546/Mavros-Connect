@@ -20,6 +20,7 @@ import Routers from "@/pages/Routers";
 import Packages from "@/pages/Packages";
 import Vouchers from "@/pages/Vouchers";
 import Payments from "@/pages/Payments";
+import Billing from "@/pages/Billing";
 import Sessions from "@/pages/Sessions";
 import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
@@ -57,6 +58,7 @@ function Router() {
               <Route path="/packages" component={Packages} />
               <Route path="/vouchers" component={Vouchers} />
               <Route path="/payments" component={Payments} />
+              <Route path="/billing" component={Billing} />
               <Route path="/sessions" component={Sessions} />
               <Route path="/users" component={Users} />
               <Route path="/settings" component={Settings} />
