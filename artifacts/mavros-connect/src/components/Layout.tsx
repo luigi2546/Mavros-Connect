@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Bell,
   Wallet,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,6 +48,7 @@ const adminNavItems = [
   { href: "/sessions", label: "Sessions", icon: Activity },
   { href: "/users", label: "Staff", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/user-settings", label: "Profile", icon: User },
 ];
 
 const staffNavItems = [
@@ -55,6 +57,7 @@ const staffNavItems = [
   { href: "/payments", label: "My Payments", icon: CreditCard },
   { href: "/sessions", label: "My Sessions", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/user-settings", label: "Profile", icon: User },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

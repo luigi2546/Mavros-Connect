@@ -24,6 +24,7 @@ import Billing from "@/pages/Billing";
 import Sessions from "@/pages/Sessions";
 import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
+import UserSettings from "@/pages/UserSettings";
 import Portal from "@/pages/Portal";
 import VoucherPrint from "@/pages/VoucherPrint";
 import PaystackCallback from "@/pages/PaystackCallback";
@@ -62,6 +63,7 @@ function Router() {
               <Route path="/sessions" component={Sessions} />
               <Route path="/users" component={Users} />
               <Route path="/settings" component={Settings} />
+              <Route path="/user-settings" component={UserSettings} />
               <Route component={NotFound} />
             </Switch>
           </Layout>
