@@ -12,6 +12,7 @@ import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
+import Analytics from "@/pages/Analytics";
 import Locations from "@/pages/Locations";
 import Routers from "@/pages/Routers";
 import Packages from "@/pages/Packages";
@@ -46,6 +47,7 @@ function Router() {
           <Layout>
             <Switch>
               <Route path="/dashboard" component={Dashboard} />
+              <Route path="/analytics" component={Analytics} />
               <Route path="/locations" component={Locations} />
               <Route path="/routers" component={Routers} />
               <Route path="/packages" component={Packages} />

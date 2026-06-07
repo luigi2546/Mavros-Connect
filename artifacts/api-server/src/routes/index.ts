@@ -11,6 +11,7 @@ import paymentsRouter from "./payments";
 import sessionsRouter from "./sessions";
 import dashboardRouter from "./dashboard";
 import portalRouter from "./portal";
+import analyticsRouter from "./analytics";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(paymentsRouter);
 router.use(sessionsRouter);
 router.use(dashboardRouter);
 router.use(portalRouter);
+router.use(analyticsRouter);
 
 export default router;

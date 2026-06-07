@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ticket, Copy, Trash2, Printer } from "lucide-react";
+import { Ticket, Copy, Trash2, Printer, Download } from "lucide-react";
 import { ghs } from "@/lib/currency";
 
 export default function Vouchers() {
@@ -56,11 +56,51 @@ export default function Vouchers() {
     window.open("/vouchers/print", "_blank");
   };
 
+  const handleExportCSV = () => {
+    if (!vouchers || vouchers.length === 0) {
+      toast({ title: "No Data", description: "No vouchers to export.", variant: "destructive" });
+      return;
+    }
+
+    const headers = ["Code", "Package", "Price", "Status", "Expires At", "Used At", "Used By MAC"];
+    const rows = vouchers.map((voucher) => {
+      const pkg = (voucher as any).package;
+      return [
+        voucher.code,
+        pkg?.name || `PKG-${voucher.packageId}`,
+        pkg?.price || "N/A",
+        voucher.status,
+        voucher.expiresAt ? new Date(voucher.expiresAt).toLocaleDateString("en-GH") : "No expiry",
+        voucher.usedAt ? new Date(voucher.usedAt).toLocaleDateString("en-GH") : "—",
+        voucher.usedByMac || "—",
+      ];
+    });
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vouchers-export-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: "Exported", description: `${vouchers.length} vouchers exported to CSV.` });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight font-mono uppercase">Voucher Management</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
+            <Download className="mr-2 h-4 w-4" /> Export CSV
+          </Button>
           <Button variant="outline" onClick={handlePrint} className="font-bold uppercase font-mono text-xs tracking-wider rounded-sm">
             <Printer className="mr-2 h-4 w-4" /> Print
           </Button>
