@@ -26,6 +26,9 @@ import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
 import UserSettings from "@/pages/UserSettings";
 import NetworkManagement from "@/pages/NetworkManagement";
+import StaffOperations from "@/pages/StaffOperations";
+import BusinessFeatures from "@/pages/BusinessFeatures";
+import IntegrationAPIs from "@/pages/IntegrationAPIs";
 import Portal from "@/pages/Portal";
 import VoucherPrint from "@/pages/VoucherPrint";
 import PaystackCallback from "@/pages/PaystackCallback";
@@ -66,6 +69,9 @@ function Router() {
               <Route path="/settings" component={Settings} />
               <Route path="/user-settings" component={UserSettings} />
               <Route path="/network" component={NetworkManagement} />
+              <Route path="/staff" component={StaffOperations} />
+              <Route path="/business" component={BusinessFeatures} />
+              <Route path="/integrations" component={IntegrationAPIs} />
               <Route component={NotFound} />
             </Switch>
           </Layout>

@@ -17,6 +17,9 @@ import notificationsRouter from "./notifications";
 import billingRouter from "./billing";
 import userExperienceRouter from "./userexperience";
 import networkManagementRouter from "./networkmanagement";
+import staffOperationsRouter from "./staffoperations";
+import businessFeaturesRouter from "./businessfeatures";
+import integrationApisRouter from "./integrationapis";
 
 const router: IRouter = Router();
 
@@ -38,5 +41,8 @@ router.use(notificationsRouter);
 router.use(billingRouter);
 router.use(userExperienceRouter);
 router.use(networkManagementRouter);
+router.use(staffOperationsRouter);
+router.use(businessFeaturesRouter);
+router.use(integrationApisRouter);
 
 export default router;

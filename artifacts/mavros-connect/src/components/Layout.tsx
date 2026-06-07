@@ -20,6 +20,9 @@ import {
   Bell,
   Wallet,
   User,
+  Shield,
+  Zap,
+  Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -48,6 +51,9 @@ const adminNavItems = [
   { href: "/billing", label: "Billing", icon: Wallet },
   { href: "/sessions", label: "Sessions", icon: Activity },
   { href: "/users", label: "Staff", icon: Users },
+  { href: "/staff", label: "Operations", icon: Shield },
+  { href: "/business", label: "Business", icon: TrendingUp },
+  { href: "/integrations", label: "Integrations", icon: Plug },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/user-settings", label: "Profile", icon: User },
 ];
