@@ -52,6 +52,10 @@ router.post("/payments/paystack/initialize", async (req, res): Promise<void> => 
   const reference = `MC-${generateVoucherCode(12)}`;
   const amountKobo = Math.round(pkg.price * 100); // Paystack uses pesewas (GHS × 100)
 
+  // Build callback URL from request host
+  const host = (process.env["REPLIT_DOMAINS"] ?? req.get("host") ?? "localhost").split(",")[0].trim();
+  const callbackUrl = `https://${host}/payment/callback`;
+
   // Call Paystack initialize API
   const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
@@ -64,6 +68,7 @@ router.post("/payments/paystack/initialize", async (req, res): Promise<void> => 
       amount: amountKobo,
       currency: "GHS",
       reference,
+      callback_url: callbackUrl,
       metadata: {
         packageId,
         macAddress: macAddress ?? null,

@@ -21,6 +21,8 @@ import Sessions from "@/pages/Sessions";
 import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
 import Portal from "@/pages/Portal";
+import VoucherPrint from "@/pages/VoucherPrint";
+import PaystackCallback from "@/pages/PaystackCallback";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,9 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/portal/:tenantSlug" component={Portal} />
-      
+      <Route path="/vouchers/print" component={VoucherPrint} />
+      <Route path="/payment/callback" component={PaystackCallback} />
+
       <Route path="/">
         <Redirect to="/dashboard" />
       </Route>
