@@ -21,30 +21,35 @@ const router: IRouter = Router();
 
 // GET /api/billing/subscriptions - List user's subscriptions
 router.get("/billing/subscriptions", authenticate, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
-  const tenantId = req.user!.tenantId;
-  if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
+  try {
+    const userId = req.user!.id;
+    const tenantId = req.user!.tenantId;
+    if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
 
-  const subscriptions = await db.select({
-    id: subscriptionsTable.id,
-    packageId: subscriptionsTable.packageId,
-    packageName: packagesTable.name,
-    status: subscriptionsTable.status,
-    billingCycle: subscriptionsTable.billingCycle,
-    price: subscriptionsTable.price,
-    nextBillingDate: subscriptionsTable.nextBillingDate,
-    startDate: subscriptionsTable.startDate,
-    cancelledAt: subscriptionsTable.cancelledAt,
-  })
-    .from(subscriptionsTable)
-    .innerJoin(packagesTable, eq(subscriptionsTable.packageId, packagesTable.id))
-    .where(and(
-      eq(subscriptionsTable.tenantId, tenantId),
-      eq(subscriptionsTable.userId, userId),
-    ))
-    .orderBy(desc(subscriptionsTable.createdAt));
+    const subscriptions = await db.select({
+      id: subscriptionsTable.id,
+      packageId: subscriptionsTable.packageId,
+      packageName: packagesTable.name,
+      status: subscriptionsTable.status,
+      billingCycle: subscriptionsTable.billingCycle,
+      price: subscriptionsTable.price,
+      nextBillingDate: subscriptionsTable.nextBillingDate,
+      startDate: subscriptionsTable.startDate,
+      cancelledAt: subscriptionsTable.cancelledAt,
+    })
+      .from(subscriptionsTable)
+      .innerJoin(packagesTable, eq(subscriptionsTable.packageId, packagesTable.id))
+      .where(and(
+        eq(subscriptionsTable.tenantId, tenantId),
+        eq(subscriptionsTable.userId, userId),
+      ))
+      .orderBy(desc(subscriptionsTable.createdAt));
 
-  res.json(subscriptions);
+    res.json(subscriptions);
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    res.status(500).json({ error: "Failed to fetch subscriptions" });
+  }
 });
 
 // POST /api/billing/subscriptions - Create subscription
@@ -219,27 +224,32 @@ router.post("/billing/promo-codes/validate", authenticate, async (req, res): Pro
 
 // GET /api/billing/refunds - List user's refunds
 router.get("/billing/refunds", authenticate, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
-  const tenantId = req.user!.tenantId;
-  if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
+  try {
+    const userId = req.user!.id;
+    const tenantId = req.user!.tenantId;
+    if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
 
-  const refunds = await db.select({
-    id: refundsTable.id,
-    paymentId: refundsTable.paymentId,
-    amount: refundsTable.amount,
-    reason: refundsTable.reason,
-    status: refundsTable.status,
-    requestedAt: refundsTable.requestedAt,
-    processedAt: refundsTable.processedAt,
-  })
-    .from(refundsTable)
-    .where(and(
-      eq(refundsTable.tenantId, tenantId),
-      eq(refundsTable.userId, userId),
-    ))
-    .orderBy(desc(refundsTable.requestedAt));
+    const refunds = await db.select({
+      id: refundsTable.id,
+      paymentId: refundsTable.paymentId,
+      amount: refundsTable.amount,
+      reason: refundsTable.reason,
+      status: refundsTable.status,
+      requestedAt: refundsTable.requestedAt,
+      processedAt: refundsTable.processedAt,
+    })
+      .from(refundsTable)
+      .where(and(
+        eq(refundsTable.tenantId, tenantId),
+        eq(refundsTable.userId, userId),
+      ))
+      .orderBy(desc(refundsTable.requestedAt));
 
-  res.json(refunds);
+    res.json(refunds);
+  } catch (error) {
+    console.error("Error fetching refunds:", error);
+    res.status(500).json({ error: "Failed to fetch refunds" });
+  }
 });
 
 // POST /api/billing/refunds - Request refund
@@ -313,27 +323,32 @@ router.patch("/billing/refunds/:id/approve", authenticate, async (req, res): Pro
 
 // GET /api/billing/invoices - List user's invoices
 router.get("/billing/invoices", authenticate, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
-  const tenantId = req.user!.tenantId;
-  if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
+  try {
+    const userId = req.user!.id;
+    const tenantId = req.user!.tenantId;
+    if (!tenantId) { res.status(403).json({ error: "No tenant" }); return; }
 
-  const invoices = await db.select({
-    id: invoicesTable.id,
-    invoiceNumber: invoicesTable.invoiceNumber,
-    total: invoicesTable.total,
-    status: invoicesTable.status,
-    issuedDate: invoicesTable.issuedDate,
-    dueDate: invoicesTable.dueDate,
-    paidDate: invoicesTable.paidDate,
-  })
-    .from(invoicesTable)
-    .where(and(
-      eq(invoicesTable.tenantId, tenantId),
-      eq(invoicesTable.userId, userId),
-    ))
-    .orderBy(desc(invoicesTable.issuedDate));
+    const invoices = await db.select({
+      id: invoicesTable.id,
+      invoiceNumber: invoicesTable.invoiceNumber,
+      total: invoicesTable.total,
+      status: invoicesTable.status,
+      issuedDate: invoicesTable.issuedDate,
+      dueDate: invoicesTable.dueDate,
+      paidDate: invoicesTable.paidDate,
+    })
+      .from(invoicesTable)
+      .where(and(
+        eq(invoicesTable.tenantId, tenantId),
+        eq(invoicesTable.userId, userId),
+      ))
+      .orderBy(desc(invoicesTable.issuedDate));
 
-  res.json(invoices);
+    res.json(invoices);
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ error: "Failed to fetch invoices" });
+  }
 });
 
 // GET /api/billing/invoices/:id - Get specific invoice

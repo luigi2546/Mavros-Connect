@@ -10,4 +10,5 @@ export * from "./audit_logs";
 export * from "./notifications";
 export * from "./billing";
 export * from "./userexperience";
+export * from "./networkmanagement";
 export * from "./billing";

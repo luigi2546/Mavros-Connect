@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { db, notificationsTable, notificationPreferencesTable } from "@workspace/db";
 import { authenticate } from "../middlewares/authenticate";
 
@@ -22,15 +22,20 @@ router.get("/notifications", authenticate, async (req, res): Promise<void> => {
 
 // ── Get unread count ──────────────────────────────────────────────────
 router.get("/notifications/unread-count", authenticate, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
-  if (!userId) { res.status(403).json({ error: "No user" }); return; }
+  try {
+    const userId = req.user!.id;
+    if (!userId) { res.status(403).json({ error: "No user" }); return; }
 
-  const result = await db.select({ count: require("drizzle-orm").sql`COUNT(*)` })
-    .from(notificationsTable)
-    .where(and(eq(notificationsTable.userId, userId), eq(notificationsTable.status, "unread")));
+    const result = await db.select({ count: sql`COUNT(*)`.mapWith(Number) })
+      .from(notificationsTable)
+      .where(and(eq(notificationsTable.userId, userId), eq(notificationsTable.status, "unread")));
 
-  const count = parseInt((result[0]?.count as string) || "0", 10);
-  res.json({ unreadCount: count });
+    const count = result[0]?.count || 0;
+    res.json({ unreadCount: count });
+  } catch (error) {
+    console.error("Error fetching unread count:", error);
+    res.status(500).json({ error: "Failed to fetch unread count" });
+  }
 });
 
 // ── Mark notification as read ─────────────────────────────────────────
