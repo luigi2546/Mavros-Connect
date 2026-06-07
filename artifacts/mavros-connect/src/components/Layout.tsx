@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 import { 
   LayoutDashboard, 
   MapPin, 
@@ -16,6 +17,7 @@ import {
   X,
   BarChart3,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -45,6 +47,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Get unread notification count
+  const { data: unreadData } = useQuery({
+    queryKey: ["unreadNotifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/notifications/unread-count");
+      return res.json();
+    },
+    refetchInterval: 15000, // Refresh every 15 seconds
+  });
 
   // Determine which nav items to show based on user role
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
@@ -113,11 +125,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex flex-1 flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="flex h-14 shrink-0 items-center border-b border-border bg-card px-4 md:hidden">
-          <button className="text-muted-foreground mr-4" onClick={() => setSidebarOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <div className="font-mono font-bold text-primary">MAVROS</div>
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:hidden">
+          <div className="flex items-center gap-2">
+            <button className="text-muted-foreground" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <div className="font-mono font-bold text-primary">MAVROS</div>
+          </div>
+          <Link href="/notifications">
+            <div className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+              <Bell size={20} />
+              {(unreadData?.unreadCount ?? 0) > 0 && (
+                <span className="absolute -top-1 -right-2 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                  {Math.min(unreadData.unreadCount, 9)}
+                </span>
+              )}
+            </div>
+          </Link>
         </header>
 
         {/* Page Content */}

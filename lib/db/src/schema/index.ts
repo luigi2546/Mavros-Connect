@@ -7,3 +7,4 @@ export * from "./vouchers";
 export * from "./payments";
 export * from "./sessions";
 export * from "./audit_logs";
+export * from "./notifications";

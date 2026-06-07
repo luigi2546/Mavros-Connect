@@ -14,6 +14,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
+import NotificationCenter from "@/pages/NotificationCenter";
 import Locations from "@/pages/Locations";
 import Routers from "@/pages/Routers";
 import Packages from "@/pages/Packages";
@@ -50,6 +51,7 @@ function Router() {
               <Route path="/dashboard" component={Dashboard} />
               <Route path="/analytics" component={Analytics} />
               <Route path="/reports" component={Reports} />
+              <Route path="/notifications" component={NotificationCenter} />
               <Route path="/locations" component={Locations} />
               <Route path="/routers" component={Routers} />
               <Route path="/packages" component={Packages} />

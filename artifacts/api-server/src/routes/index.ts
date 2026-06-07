@@ -13,6 +13,7 @@ import dashboardRouter from "./dashboard";
 import portalRouter from "./portal";
 import analyticsRouter from "./analytics";
 import reportingRouter from "./reporting";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(dashboardRouter);
 router.use(portalRouter);
 router.use(analyticsRouter);
 router.use(reportingRouter);
+router.use(notificationsRouter);
 
 export default router;
