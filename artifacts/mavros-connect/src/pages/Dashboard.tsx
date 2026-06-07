@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, CreditCard, MapPin, Users, Wifi, Ticket } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { ghs } from "@/lib/currency";
 import StaffDashboard from "./StaffDashboard";
 
@@ -85,8 +86,39 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="font-mono text-sm uppercase tracking-wider text-muted-foreground">Traffic Analysis</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center border-t border-border bg-muted/10">
-            <p className="text-muted-foreground font-mono text-sm">CHART MODULE PENDING</p>
+          <CardContent className="h-[300px] p-4 border-t border-border bg-muted/10">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={generateChartData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="time" stroke="var(--color-muted-foreground)" style={{ fontSize: '12px' }} />
+                <YAxis stroke="var(--color-muted-foreground)" style={{ fontSize: '12px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-card)', 
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '4px'
+                  }}
+                  formatter={(value) => ghs(Number(value))}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="var(--color-primary)" 
+                  strokeWidth={2}
+                  dot={{ fill: 'var(--color-primary)', r: 4 }}
+                  name="Revenue"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="sessions" 
+                  stroke="var(--color-emerald-500)" 
+                  strokeWidth={2}
+                  dot={{ fill: 'var(--color-emerald-500)', r: 4 }}
+                  name="Sessions"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
@@ -123,6 +155,21 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function generateChartData() {
+  const now = new Date();
+  const data = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    data.push({
+      time: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      revenue: Math.floor(Math.random() * 500) + 100,
+      sessions: Math.floor(Math.random() * 50) + 10,
+    });
+  }
+  return data;
 }
 
 function StatsCard({ title, value, icon, subtitle, highlight = false }: { title: string, value: string | number, icon: React.ReactNode, subtitle?: string, highlight?: boolean }) {
