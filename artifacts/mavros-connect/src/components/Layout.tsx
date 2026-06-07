@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+const adminNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/routers", label: "Routers", icon: Wifi },
@@ -29,10 +29,22 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+const staffNavItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vouchers", label: "My Vouchers", icon: Ticket },
+  { href: "/payments", label: "My Payments", icon: CreditCard },
+  { href: "/sessions", label: "My Sessions", icon: Activity },
+  { href: "/settings", label: "Settings", icon: Settings },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Determine which nav items to show based on user role
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+  const navItems = isAdmin ? adminNavItems : staffNavItems;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground selection:bg-primary/30">

@@ -1,11 +1,19 @@
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, CreditCard, MapPin, Users, Wifi, Ticket } from "lucide-react";
 import { ghs } from "@/lib/currency";
+import StaffDashboard from "./StaffDashboard";
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const { data: stats, isLoading } = useGetDashboardStats({ query: { queryKey: getGetDashboardStatsQueryKey() } });
+
+  // Show staff dashboard for non-admin roles
+  if (user?.role === "staff" || user?.role === "manager") {
+    return <StaffDashboard />;
+  }
 
   if (isLoading) {
     return (
