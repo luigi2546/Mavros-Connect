@@ -13,7 +13,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, and, desc, gte } from "drizzle-orm";
-import { authenticate } from "../middleware/auth";
+import { authenticate } from "../middlewares/authenticate";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 
