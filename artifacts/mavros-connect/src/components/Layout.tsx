@@ -15,12 +15,14 @@ import {
   Menu,
   X,
   BarChart3,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const adminNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/reports", label: "Reports", icon: TrendingUp },
   { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/routers", label: "Routers", icon: Wifi },
   { href: "/packages", label: "Packages", icon: Package },
