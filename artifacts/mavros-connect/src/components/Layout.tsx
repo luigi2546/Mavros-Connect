@@ -41,6 +41,7 @@ const adminNavItems = [
   { href: "/reports", label: "Reports", icon: TrendingUp },
   { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/routers", label: "Routers", icon: Wifi },
+  { href: "/network", label: "Network", icon: Activity },
   { href: "/packages", label: "Packages", icon: Package },
   { href: "/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/payments", label: "Payments", icon: CreditCard },

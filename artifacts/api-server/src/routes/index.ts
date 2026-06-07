@@ -16,6 +16,7 @@ import reportingRouter from "./reporting";
 import notificationsRouter from "./notifications";
 import billingRouter from "./billing";
 import userExperienceRouter from "./userexperience";
+import networkManagementRouter from "./networkmanagement";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(reportingRouter);
 router.use(notificationsRouter);
 router.use(billingRouter);
 router.use(userExperienceRouter);
+router.use(networkManagementRouter);
 
 export default router;
