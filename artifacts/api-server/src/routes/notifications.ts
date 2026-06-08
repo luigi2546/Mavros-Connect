@@ -27,11 +27,11 @@ router.get("/notifications/unread-count", authenticate, async (req, res): Promis
     const userId = req.user!.userId;
     if (!userId) { res.status(403).json({ error: "No user" }); return; }
 
-    const result = await db.select({ count: sql`COUNT(*)`.mapWith(Number) })
+    const notifications = await db.select()
       .from(notificationsTable)
       .where(and(eq(notificationsTable.userId, userId), eq(notificationsTable.status, "unread")));
 
-    const count = result[0]?.count || 0;
+    const count = notifications.length;
     res.json({ unreadCount: count });
   } catch (error) {
     console.error("Error fetching unread count:", error);
