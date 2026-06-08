@@ -21,20 +21,35 @@ import bcrypt from "bcryptjs";
 const userExperienceRouter = Router();
 userExperienceRouter.use(authenticate);
 
-// User Profile: Get my profile
+// User Profile: Get my profile (auto-creates if missing)
 userExperienceRouter.get("/user/profile", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
 
-    const profile = await db
+    let profile = await db
       .select()
       .from(userProfilesTable)
       .where(and(eq(userProfilesTable.userId, userId), eq(userProfilesTable.tenantId, tenantId)))
       .then((rows) => rows[0]);
 
     if (!profile) {
-      return res.status(404).json({ error: "Profile not found" });
+      const user = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .then((rows) => rows[0]);
+
+      const [created] = await db
+        .insert(userProfilesTable)
+        .values({
+          userId,
+          tenantId,
+          firstName: user?.name?.split(" ")[0] ?? null,
+          lastName: user?.name?.split(" ").slice(1).join(" ") || null,
+        })
+        .returning();
+      profile = created;
     }
 
     res.json(profile);
@@ -47,9 +62,9 @@ userExperienceRouter.get("/user/profile", async (req, res) => {
 // User Profile: Update my profile
 userExperienceRouter.patch("/user/profile", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
-    const { firstName, lastName, bio, phone, department, jobTitle, timezone, language, theme } = req.body;
+    const { firstName, lastName, bio, phoneNumber, timezone, language, theme } = req.body;
 
     await db
       .update(userProfilesTable)
@@ -57,12 +72,10 @@ userExperienceRouter.patch("/user/profile", async (req, res) => {
         firstName: firstName || undefined,
         lastName: lastName || undefined,
         bio: bio || undefined,
-        phone: phone || undefined,
-        department: department || undefined,
-        jobTitle: jobTitle || undefined,
-        timezone: timezone || undefined,
+        phoneNumber: phoneNumber || undefined,
+        timeZone: timezone || undefined,
         language: language || undefined,
-        theme: theme || undefined,
+        preferredTheme: theme || undefined,
         updatedAt: new Date(),
       })
       .where(and(eq(userProfilesTable.userId, userId), eq(userProfilesTable.tenantId, tenantId)));
@@ -77,7 +90,7 @@ userExperienceRouter.patch("/user/profile", async (req, res) => {
 // 2FA: Request 2FA setup (send verification code)
 userExperienceRouter.post("/user/2fa/setup", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
 
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -102,7 +115,7 @@ userExperienceRouter.post("/user/2fa/setup", async (req, res) => {
 // 2FA: Verify code and enable 2FA
 userExperienceRouter.post("/user/2fa/verify", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
     const { code } = req.body;
 
@@ -160,7 +173,7 @@ userExperienceRouter.post("/user/2fa/verify", async (req, res) => {
 // 2FA: Disable 2FA
 userExperienceRouter.post("/user/2fa/disable", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
 
     await db
@@ -197,7 +210,7 @@ userExperienceRouter.get("/security-questions", async (req, res) => {
 // Security Questions: Set my security answers
 userExperienceRouter.post("/user/security-answers", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
     const { answers } = req.body; // [{ questionId, answer }, ...]
 
@@ -236,7 +249,7 @@ userExperienceRouter.post("/user/security-answers", async (req, res) => {
 // Device Sessions: Get my active sessions
 userExperienceRouter.get("/user/sessions", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
 
     const sessions = await db
@@ -257,7 +270,7 @@ userExperienceRouter.get("/user/sessions", async (req, res) => {
 // Device Sessions: Logout from specific device
 userExperienceRouter.post("/user/sessions/:id/logout", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
     const sessionId = parseInt(req.params.id);
 
@@ -292,7 +305,7 @@ userExperienceRouter.post("/user/sessions/:id/logout", async (req, res) => {
 // Preferences: Get my preferences
 userExperienceRouter.get("/user/preferences", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
 
     const preferences = await db
@@ -313,7 +326,7 @@ userExperienceRouter.get("/user/preferences", async (req, res) => {
 // Preferences: Update my preferences
 userExperienceRouter.patch("/user/preferences", async (req, res) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any).userId;
     const tenantId = (req.user as any).tenantId;
     const {
       emailNotifications,
