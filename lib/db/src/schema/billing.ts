@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp, decimal, varchar, uuid, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, decimal, varchar, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -6,8 +6,8 @@ import { relations } from "drizzle-orm";
 // ────────────────────────────────────────────────────────────────────────────
 export const subscriptionsTable = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
-  tenantId: uuid("tenant_id").notNull(),
-  userId: uuid("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull(),
+  userId: integer("user_id").notNull(),
   packageId: integer("package_id").notNull(),
   
   // Subscription details
@@ -38,7 +38,7 @@ export const subscriptionsTable = pgTable("subscriptions", {
 // ────────────────────────────────────────────────────────────────────────────
 export const promoCodesTable = pgTable("promo_codes", {
   id: serial("id").primaryKey(),
-  tenantId: uuid("tenant_id").notNull(),
+  tenantId: integer("tenant_id").notNull(),
   
   // Code details
   code: varchar("code").notNull().unique(),
@@ -71,9 +71,9 @@ export const promoCodesTable = pgTable("promo_codes", {
 // ────────────────────────────────────────────────────────────────────────────
 export const refundsTable = pgTable("refunds", {
   id: serial("id").primaryKey(),
-  tenantId: uuid("tenant_id").notNull(),
+  tenantId: integer("tenant_id").notNull(),
   paymentId: integer("payment_id").notNull(),
-  userId: uuid("user_id").notNull(),
+  userId: integer("user_id").notNull(),
   
   // Refund details
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
@@ -102,8 +102,8 @@ export const refundsTable = pgTable("refunds", {
 // ────────────────────────────────────────────────────────────────────────────
 export const invoicesTable = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  tenantId: uuid("tenant_id").notNull(),
-  userId: uuid("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull(),
+  userId: integer("user_id").notNull(),
   
   // Invoice identification
   invoiceNumber: varchar("invoice_number").notNull().unique(),
@@ -141,9 +141,9 @@ export const invoicesTable = pgTable("invoices", {
 // ────────────────────────────────────────────────────────────────────────────
 export const promoCodeUsageTable = pgTable("promo_code_usage", {
   id: serial("id").primaryKey(),
-  tenantId: uuid("tenant_id").notNull(),
+  tenantId: integer("tenant_id").notNull(),
   promoCodeId: integer("promo_code_id").notNull(),
-  userId: uuid("user_id").notNull(),
+  userId: integer("user_id").notNull(),
   paymentId: integer("payment_id"), // Link to payment
   subscriptionId: integer("subscription_id"), // Link to subscription
   

@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-3.11"]
+modules = ["nodejs-24", "python-3.11", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -36,3 +36,6 @@ externalPort = 3000
 [userenv.shared]
 PAYSTACK_SECRET_KEY = "sk_live_ea241fba2f3fa7051a0aa2cc6accab250b07eee3"
 PAYSTACK_PUBLIC_KEY = "pk_live_9f0071246f7669a36e088a6e9eccb715fbe21386"
+
+[nix]
+channel = "stable-25_05"
