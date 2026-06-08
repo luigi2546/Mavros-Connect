@@ -69,6 +69,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/roles");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: staffMembers = [], isLoading: staffLoading } = useQuery({
@@ -77,6 +78,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/members");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: assignments = [] } = useQuery({
@@ -85,6 +87,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/assignments");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: approvals = [] } = useQuery({
@@ -93,6 +96,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/approval-requests");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: shifts = [] } = useQuery({
@@ -101,6 +105,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/shifts");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: performance = [] } = useQuery({
@@ -109,6 +114,7 @@ export default function StaffOperations() {
       const response = await authenticatedFetch("/api/staff/performance");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const getStatusColor = (status: string) => {

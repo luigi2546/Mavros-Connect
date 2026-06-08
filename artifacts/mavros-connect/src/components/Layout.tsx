@@ -72,11 +72,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Get unread notification count
+  // Get unread notification count — only when authenticated
   const { data: unreadData } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: () => authenticatedFetch("/api/notifications/unread-count"),
-    refetchInterval: 15000, // Refresh every 15 seconds
+    refetchInterval: 30000,
+    enabled: !!user,
+    retry: false,
   });
 
   // Determine which nav items to show based on user role

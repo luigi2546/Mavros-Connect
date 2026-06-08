@@ -82,6 +82,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/reports");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: metrics = [] } = useQuery({
@@ -90,6 +91,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/metrics");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: insights = [] } = useQuery({
@@ -98,6 +100,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/insights");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: revenue = [] } = useQuery({
@@ -106,6 +109,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/revenue");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: operational = [] } = useQuery({
@@ -114,6 +118,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/operational");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: forecasts = [] } = useQuery({
@@ -122,6 +127,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/forecasts");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: trends = [] } = useQuery({
@@ -130,6 +136,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/trends");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: goals = [] } = useQuery({
@@ -138,6 +145,7 @@ export default function BusinessFeatures() {
       const response = await authenticatedFetch("/api/business/goals");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const getStatusColor = (status: string) => {

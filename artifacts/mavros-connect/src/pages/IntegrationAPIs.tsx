@@ -80,6 +80,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/api-keys");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: webhooks = [] } = useQuery({
@@ -88,6 +89,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/webhooks");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: integrations = [] } = useQuery({
@@ -96,6 +98,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/list");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: oauthApps = [] } = useQuery({
@@ -104,6 +107,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/oauth/apps");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: rateLimits = [] } = useQuery({
@@ -112,6 +116,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/rate-limits");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const { data: apiDocs = [] } = useQuery({
@@ -120,6 +125,7 @@ export default function IntegrationAPIs() {
       const response = await authenticatedFetch("/api/integrations/docs");
       return response.json();
     },
+    select: (data: unknown) => Array.isArray(data) ? data : [],
   });
 
   const getStatusColor = (status: string | boolean) => {

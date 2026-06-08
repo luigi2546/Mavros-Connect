@@ -15,7 +15,7 @@ export async function authenticatedFetch(
 
   if (options?.headers) {
     if (typeof options.headers === "object" && !Array.isArray(options.headers)) {
-      Object.assign(headers, options.headers);
+      Object.assign(headers, options.headers as Record<string, string>);
     }
   }
 
@@ -23,8 +23,15 @@ export async function authenticatedFetch(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`API error ${response.status}: ${errorText}`);
+  }
+
+  return response;
 }
